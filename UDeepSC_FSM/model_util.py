@@ -621,10 +621,15 @@ class ViTEncoder_FSM(nn.Module):
 
     def forward(self, x, ta_perform, noise_std):
         if ta_perform.startswith('vqa'):
+            x = x.type(torch.float32)
+            # print(f'Input data type: {x.dtype}')
             x = self.linear_embed_vqa(x)
             batch_size = x.shape[0]
             cls_tokens = self.cls_token[ta_perform].expand(batch_size, -1, -1).to(x.device) 
             task_embedd = self.task_embedd[ta_perform].expand(batch_size, -1, -1).to(x.device)
+            # print(f"cls_tokens shape: {cls_tokens.shape}")
+            # print(f"x shape: {x.shape}")
+            # print(f"task_embedd shape: {task_embedd.shape}")
             x = torch.cat((cls_tokens, x, task_embedd), dim=1)
         elif ta_perform.startswith('msa'):
             x = self.linear_embed_msa(x)
@@ -679,7 +684,7 @@ class TextEncoder_FSM(nn.Module):
                  use_learnable_pos_emb=False, mode='tiny', num_FSM=2):
         super().__init__()
         self.num_features = self.embed_dim = embed_dim  # num_features for consistency with other models
-        bert_ckpt = f"/Data1/zhangguangyi/SemanRes2/JSACCode/UDeepSC_Base/pretrained_models/bert-{mode}"
+        bert_ckpt = f"/home/ubuntu/franklee/t-udeepsc/pretrained_models/bert-{mode}"
         # self.embeddings = BertEmbeddings( bert_ckpt)
         temp = BertModel.from_pretrained(bert_ckpt)
         self.embeddings = temp.embeddings
@@ -869,10 +874,11 @@ class FSM(nn.Module):
           
             prob_kept = prob[:,:,0]    # Obtain the first one
             # prob_kept = torch.randn(prob_kept.shape).cuda()
-            num_kept = int(np.round(self.mask_num * ratio))
+            # num_kept = int(np.round(self.mask_num * ratio))
+            num_kept = int(torch.round(self.mask_num * ratio).cpu().numpy())
             curr_m = F.gumbel_softmax(prob, hard=True)[:, :, 0:1] * prev_m
             keep_index = torch.argsort(prob_kept, dim=1, descending=True)[:, :num_kept]    
-            print(keep_index[0])
+            # print(keep_index[0])
             skip_index = torch.zeros(batch_size, num_skip, dtype=keep_index.dtype, device=keep_index.device)
             full_m = torch.cat([skip_index, keep_index + num_skip], dim=1)
             input_feature = batch_index_select(input_feature, full_m)

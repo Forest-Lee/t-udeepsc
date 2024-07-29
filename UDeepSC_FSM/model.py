@@ -42,7 +42,7 @@ class UDeepSC(nn.Module):
                                 drop_path_rate=drop_path_rate,norm_layer=norm_layer, init_values=init_values,
                                 use_learnable_pos_emb=use_learnable_pos_emb)
         
-        bert_ckpt = f"/Data1/zhangguangyi/SemanRes2/JSACCode/UDeepSC_Base/pretrained_models/bert-{mode}"
+        bert_ckpt = f"/home/ubuntu/franklee/t-udeepsc/pretrained_models/bert-{mode}"
         
         
         self.spe_encoder = SPTEncoder(in_chans=encoder_in_chans,num_classes=encoder_num_classes, embed_dim=speech_embed_dim,

@@ -14,6 +14,19 @@ from utils import get_model, sel_criterion, load_checkpoint
 from utils import NativeScalerWithGradNormCount as NativeScaler
 from datasets import build_dataset, BatchSchedulerSampler, collate_fn
 
+class DualWriter:
+    def __init__(self, filename):
+        self.file = open(filename, 'w', encoding='utf-8')
+        self.stdout = sys.stdout
+
+    def write(self, message):
+        self.stdout.write(message)
+        self.file.write(message)
+
+    def flush(self):  # 如果使用print函数，可能需要这个
+        self.stdout.flush()
+        self.file.flush()
+
 ############################################################
 def seed_initial(seed=0):
     seed += utils.get_rank()
@@ -145,11 +158,12 @@ def main(args):
             trainloader.sampler.set_epoch(epoch)
 
         if args.ta_perform.startswith('img') or args.ta_perform.startswith('text'):
-            train_stats = train_epoch_it(
-                    model, criterion, trainloader, optimizer, device, epoch, loss_scaler, 
-                    args.ta_perform, args.clip_grad,  start_steps=epoch * num_training_steps_per_epoch,
-                    lr_schedule_values=lr_schedule_values, wd_schedule_values=wd_schedule_values, 
-                    update_freq=args.update_freq)
+            # train_stats = train_epoch_it(
+            #         model, criterion, trainloader, optimizer, device, epoch, loss_scaler, 
+            #         args.ta_perform, args.clip_grad,  start_steps=epoch * num_training_steps_per_epoch,
+            #         lr_schedule_values=lr_schedule_values, wd_schedule_values=wd_schedule_values, 
+            #         update_freq=args.update_freq)
+            print()
         elif args.ta_perform.startswith('vqa'):
             train_stats = train_epoch_vqa(
                     model, criterion, trainloader, optimizer, device, epoch, loss_scaler, 
@@ -205,4 +219,11 @@ if __name__ == '__main__':
     opts = get_args()
     if opts.output_dir:
         Path(opts.output_dir).mkdir(parents=True, exist_ok=True)
-    main(opts)
+    # main(opts)
+        sys.stdout = DualWriter(f'output/output-{opts.ta_perform}.txt')
+
+    try:
+        main(opts)
+    finally:
+        sys.stdout.file.close()
+        sys.stdout = sys.stdout.stdout

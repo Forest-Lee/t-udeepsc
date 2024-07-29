@@ -42,7 +42,7 @@ class UDeepSC_M1(nn.Module):
                                 drop_path_rate=drop_path_rate,norm_layer=norm_layer, init_values=init_values,
                                 use_learnable_pos_emb=use_learnable_pos_emb)
         
-        bert_ckpt = f"/Data1/zhangguangyi/SemanRes2/JSACCode/UDeepSC_Base/pretrained_models/bert-{mode}"
+        bert_ckpt = f"/home/ubuntu/franklee/t-udeepsc/pretrained_models/bert-{mode}"
         self.text_encoder = BertModel.from_pretrained(bert_ckpt)
         
         self.spe_encoder = SPTEncoder(in_chans=encoder_in_chans,num_classes=encoder_num_classes, embed_dim=speech_embed_dim,
@@ -201,7 +201,7 @@ class UDeepSC_M2(nn.Module):
                                 drop_path_rate=drop_path_rate,norm_layer=norm_layer, init_values=init_values,
                                 use_learnable_pos_emb=use_learnable_pos_emb)
         
-        bert_ckpt = f"/Data1/zhangguangyi/SemanRes2/JSACCode/UDeepSC_Base/pretrained_models/bert-{mode}"
+        bert_ckpt = f"/home/ubuntu/franklee/t-udeepsc/pretrained_models/bert-{mode}"
         self.text_encoder = BertModel.from_pretrained(bert_ckpt)
         
         self.spe_encoder = SPTEncoder(in_chans=encoder_in_chans,num_classes=encoder_num_classes, embed_dim=speech_embed_dim,
@@ -304,7 +304,9 @@ class UDeepSC_M2(nn.Module):
         else:
             noise_std = torch.FloatTensor([1]) * 10**(-test_snr/20) 
         if text is not None:
-            x_text = self.text_encoder(ta_perform, text, return_dict=False)[0]
+            # print(type(text), type(ta_perform))  # <class 'torch.Tensor'> <class 'str'>
+            # x_text = self.text_encoder(ta_perform, text, return_dict=False)[0]
+            x_text = self.text_encoder(input_ids=text, return_dict=False)[0]
             # x_text = self.LN(x_text)
             if ta_perform.startswith('textc'):
                 x_text = x_text[:,0,:].unsqueeze(1)

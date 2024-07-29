@@ -1,6 +1,6 @@
-CUDA_VISIBLE_DEVICES=1  python3  udeepsc_main.py \
+CUDA_VISIBLE_DEVICES=0  python3  udeepsc_main-owl.py \
     --model  UDeepSC_model  \
-    --output_dir ckpt_record  \
+    --output_dir ckpt_record2  \
     --batch_size 40 \
     --input_size 224 \
     --lr  6e-6 \
@@ -8,7 +8,7 @@ CUDA_VISIBLE_DEVICES=1  python3  udeepsc_main.py \
     --opt_betas 0.95 0.99  \
     --save_freq 2   \
     --ta_perform vqa \
-    --eval
+    # --eval
    
   
  

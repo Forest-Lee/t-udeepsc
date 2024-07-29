@@ -15,7 +15,7 @@ from torchvision import datasets, transforms
 from msa_utils import PAD, Config_MSA, MSA
 # from pytorch_transformers import BertTokenizer
 from torch.utils.data.sampler import RandomSampler
-bert_tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+bert_tokenizer = BertTokenizer.from_pretrained('/home/ubuntu/franklee/t-udeepsc/pretrained_models/bert-base-uncased')
 
 class BatchSchedulerSampler(torch.utils.data.sampler.Sampler):
     """

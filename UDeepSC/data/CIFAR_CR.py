@@ -92,6 +92,7 @@ class CIFAR_CR(VisionDataset):
         for fentry in (self.train_list + self.test_list):
             filename, md5 = fentry[0], fentry[1]
             fpath = os.path.join(root, self.base_folder, filename)
+            # print(fpath)  # data/cifar/data_batch_x
             if not check_integrity(fpath, md5):
                 return False
         return True
@@ -100,7 +101,9 @@ class CIFAR_CR(VisionDataset):
         if self._check_integrity():
             print('Files already downloaded and verified')
             return
+        # print(self.root)  # data/
         download_and_extract_archive(self.url, self.root, filename=self.filename, md5=self.tgz_md5)
+        # generate dataset batch files in 'data/cifar-10-batches-py' (should be 'data/cifar'), rename manually
 
 
 

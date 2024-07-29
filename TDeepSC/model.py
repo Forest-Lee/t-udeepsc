@@ -165,7 +165,7 @@ class TDeepSC_vqa(nn.Module):
                                 drop_path_rate=drop_path_rate,norm_layer=norm_layer, init_values=init_values,
                                 use_learnable_pos_emb=use_learnable_pos_emb)
         
-        bert_ckpt = f"/Data1/zhangguangyi/SemanRes2/JSACCode/TDeepSC_Base/pretrain_models/bert-{mode}/"
+        bert_ckpt = f"/home/ubuntu/franklee/t-udeepsc/pretrained_models/bert-{mode}/"
         self.text_encoder = BertModel.from_pretrained(bert_ckpt)
         if mode=='tiny':
             encoder_dim_text = 128
@@ -242,7 +242,7 @@ class TDeepSC_textc(nn.Module):
                  qkv_bias=False, qk_scale=None,norm_layer=nn.LayerNorm, init_values=0.,
                  ):
         super().__init__()
-        bert_ckpt = f"/Data1/zhangguangyi/SemanRes2/JSACCode/TDeepSC_Base/pretrain_models/bert-{mode}/"
+        bert_ckpt = f"/home/ubuntu/franklee/t-udeepsc/pretrained_models/bert-{mode}/"
         self.text_encoder = BertModel.from_pretrained(bert_ckpt)
         if mode=='tiny':
             encoder_embed_dim = 128
@@ -281,7 +281,8 @@ class TDeepSC_textc(nn.Module):
         return {'pos_embed', 'cls_token', 'mask_token'}
 
     def forward(self, text=None, img=None, ta_perform=None, test_snr=torch.FloatTensor([12])):
-        x = self.text_encoder(ta_perform=None, input_ids= text, return_dict=False)[0]
+        # x = self.text_encoder(ta_perform=None, input_ids= text, return_dict=False)[0]
+        x = self.text_encoder(input_ids= text, return_dict=False)[0]
         batch_size = x.shape[0]
         if self.training:
             noise_snr, noise_std = noise_gen(self.training)
@@ -306,7 +307,7 @@ class TDeepSC_textr(nn.Module):
                  qkv_bias=False, qk_scale=None,norm_layer=nn.LayerNorm, init_values=0.,
                  ):
         super().__init__()
-        bert_ckpt = f"/Data1/zhangguangyi/SemanRes2/JSACCode/TDeepSC_Base/pretrain_models/bert-{mode}/"
+        bert_ckpt = f"/home/ubuntu/franklee/t-udeepsc/pretrained_models/bert-{mode}/"
         self.text_encoder = BertModel.from_pretrained(bert_ckpt)
         if mode=='tiny':
             encoder_embed_dim = 128
@@ -381,7 +382,7 @@ class TDeepSC_msa(nn.Module):
                                 drop_path_rate=drop_path_rate,norm_layer=norm_layer, init_values=init_values,
                                 use_learnable_pos_emb=use_learnable_pos_emb)
         
-        bert_ckpt = f"/Data1/zhangguangyi/SemanRes2/JSACCode/TDeepSC_Base/pretrain_models/bert-{mode}"
+        bert_ckpt = f"/home/ubuntu/franklee/t-udeepsc/pretrained_models/bert-{mode}/"
         self.text_encoder = BertModel.from_pretrained(bert_ckpt)
         if mode=='tiny':
             encoder_dim_text = 128
@@ -428,6 +429,7 @@ class TDeepSC_msa(nn.Module):
         return {'pos_embed', 'cls_token', 'mask_token'}
 
     def forward(self, text=None, img=None, speech=None, ta_perform=None, test_snr=torch.FloatTensor([-2])):
+        print(text.type)
         x_text = self.text_encoder(input_ids=text, return_dict=False)[0]
         x_img = self.img_encoder(img, ta_perform)
         x_spe = self.spe_encoder(speech, ta_perform)

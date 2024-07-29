@@ -5,6 +5,7 @@ import torch
 import utils
 import model   
 import torch.backends.cudnn as cudnn
+import warnings
 
 from engine import *
 from pathlib import Path 
@@ -13,6 +14,21 @@ from optim_factory import create_optimizer
 from utils import NativeScalerWithGradNormCount as NativeScaler
 from utils import get_model, sel_criterion_train, sel_criterion_test, load_checkpoint
 from datasets import build_dataset_train, build_dataset_test, BatchSchedulerSampler, collate_fn, build_dataloader
+
+warnings.filterwarnings("ignore")
+
+class DualWriter:
+    def __init__(self, filename):
+        self.file = open(filename, 'w', encoding='utf-8')
+        self.stdout = sys.stdout
+
+    def write(self, message):
+        self.stdout.write(message)
+        self.file.write(message)
+
+    def flush(self):  # 如果使用print函数，可能需要这个
+        self.stdout.flush()
+        self.file.flush()
 
 ############################################################
 def seed_initial(seed=0):
@@ -27,7 +43,8 @@ def seed_initial(seed=0):
 def main(args):
     ### Configuration
     utils.init_distributed_mode(args)
-    device = torch.device(args.device)
+    # device = torch.device(args.device)
+    device = 'cuda:0' if torch.cuda.is_available() else 'cpu:0'
     seed_initial(seed=args.seed)
     ####################################### Get the model
     model = get_model(args)
@@ -47,9 +64,10 @@ def main(args):
     print("------------------------------------------------------")
     ############## Get the data and dataloader
     
-    # ta_sel = ['textr','textc']
-    ta_sel = ['msa', 'textr']
-    # ta_sel = ['imgr']
+    # ta_sel = ['textr', 'textc']
+    # ta_sel = ['msa', 'textr']
+    ta_sel = ['imgr', 'imgc']
+    # ta_sel = ['vqa', 'textr']
     trainset_group = build_dataset_train(is_train=True, ta_sel=ta_sel, args=args)
     trainloader_group= build_dataloader(ta_sel,trainset_group, args=args)
 
@@ -130,11 +148,11 @@ def main(args):
             for trainloader in trainloader_group.values():
                 trainloader.sampler.set_epoch(epoch)
 
-        train_stats = train_epoch_uni(
-                model, criterion_train, trainloader_group, optimizer, device, epoch, loss_scaler, 
-                ta_sel, args.clip_grad,  start_steps=epoch * num_training_steps_per_epoch,
-                lr_schedule_values=lr_schedule_values, wd_schedule_values=wd_schedule_values, 
-                update_freq=args.update_freq)
+        # train_stats = train_epoch_uni(
+        #         model, criterion_train, trainloader_group, optimizer, device, epoch, loss_scaler, 
+        #         ta_sel, args.clip_grad,  start_steps=epoch * num_training_steps_per_epoch,
+        #         lr_schedule_values=lr_schedule_values, wd_schedule_values=wd_schedule_values, 
+        #         update_freq=args.update_freq)
    
         
         inter_time = time.time() - start_time
@@ -183,4 +201,11 @@ if __name__ == '__main__':
     opts = get_args()
     if opts.output_dir:
         Path(opts.output_dir).mkdir(parents=True, exist_ok=True)
-    main(opts)
+    # main(opts)
+    sys.stdout = DualWriter(f'output-{opts.ta_perform}.txt')
+
+    try:
+        main(opts)
+    finally:
+        sys.stdout.file.close()
+        sys.stdout = sys.stdout.stdout

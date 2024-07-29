@@ -94,13 +94,14 @@ def evaluate(ta_perform: str, net: torch.nn.Module, dataloader: Iterable,
             for batch_idx, (texts, targets) in enumerate(dataloader):
                 loss = 0
                 texts, targets = texts.to(device), targets.to(device)
-                targets = targets[:,1:]
+                # print(targets.shape)  # torch.Size([50, 66])
+                targets = targets[:,2:]
                 outputs = net(text=texts, ta_perform=ta_perform)
                 batch_size = targets.size(0)
                 preds = torch.zeros_like(targets)
                 for i in range(outputs.shape[1]):
-                    # print(targets.shape)
-                    # print(outputs.shape)
+                    # print(targets.shape)  # torch.Size([50, 65])
+                    # print(outputs.shape)  # torch.Size([50, 64, 34000])
                     loss += criterion(outputs, targets[:,])
                     
 
@@ -220,6 +221,7 @@ def train_epoch_uni(model: torch.nn.Module, criterion: dict,
     data_iter_step = 0
     num_tasks = len(data_dict)
     data_tuple = [data_loader for data_loader in data_dict.values()]
+    # print(len(data_tuple))  # ['imgr']->1
     # data_tuple[2],data_tuple[3],data_tuple[4]
     for data_batch in zip(data_tuple[0], data_tuple[1]):    
         step = data_iter_step // update_freq
@@ -233,6 +235,7 @@ def train_epoch_uni(model: torch.nn.Module, criterion: dict,
         imgs, texts, speechs, targets = None, None, None, None
         ta_index = np.random.randint(num_tasks)
         ta = ta_sel[ta_index]
+        # print(ta, type(ta))  # textc <class 'str'>
         data = data_batch[ta_index]
         if ta.startswith('img'):
             imgs = data[0].to(device, non_blocking=True)
@@ -252,7 +255,8 @@ def train_epoch_uni(model: torch.nn.Module, criterion: dict,
         else:
             raise NotImplementedError()
         batch_size = targets.shape[0]
-        sel_batch = [imgs, texts, speechs]                                           
+        sel_batch = [imgs, texts, speechs]  
+        # print(type(texts), type(targets))  # <class 'torch.Tensor'> <class 'torch.Tensor'>
         # with torch.cuda.amp.autocast():
         loss, outputs = train_class_batch_uni(
             ta, model, sel_batch, targets, criterion)
@@ -302,7 +306,7 @@ def train_epoch_uni(model: torch.nn.Module, criterion: dict,
             # acc_meter.update((outputs.max(-1)[-1] == targets.max(-1)[-1]).float().mean().item(), n=batch_size)
             loss_meter_dict[ta].update(loss_value, 1)
         
-        if data_iter_step % print_freq == 0:
+        if data_iter_step % print_freq == 0:  # TODO: num_samples
             if ta.startswith('imgc'):
                 print('Epoch:[%d] [%s] %d/%d: [loss: %.3f] [acc1: %.3f /100] [lr: %.3e]' 
                     %(epoch, ta, batch_size*data_iter_step, 5000,

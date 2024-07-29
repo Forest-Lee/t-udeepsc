@@ -14,6 +14,19 @@ from utils import NativeScalerWithGradNormCount as NativeScaler
 from utils import get_model, sel_criterion_train, sel_criterion_test, load_checkpoint
 from datasets import build_dataset_train, build_dataset_test, BatchSchedulerSampler, collate_fn, build_dataloader
 
+class DualWriter:
+    def __init__(self, filename):
+        self.file = open(filename, 'w', encoding='utf-8')
+        self.stdout = sys.stdout
+
+    def write(self, message):
+        self.stdout.write(message)
+        self.file.write(message)
+
+    def flush(self):  # 如果使用print函数，可能需要这个
+        self.stdout.flush()
+        self.file.flush()
+
 ############################################################
 def seed_initial(seed=0):
     seed += utils.get_rank()
@@ -195,4 +208,11 @@ if __name__ == '__main__':
     opts = get_args()
     if opts.output_dir:
         Path(opts.output_dir).mkdir(parents=True, exist_ok=True)
-    main(opts)
+    # main(opts)
+    sys.stdout = DualWriter(f'output-{opts.ta_perform}.txt')
+
+    try:
+        main(opts)
+    finally:
+        sys.stdout.file.close()
+        sys.stdout = sys.stdout.stdout
